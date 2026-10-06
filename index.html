@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Business Entities Classification Exercise</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Cormorant Garamond for regal legal headings & Inter for clean text -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            gold: {
+              50: '#FDFBF7',
+              100: '#FAF4E8',
+              200: '#F3E5C8',
+              300: '#EBD4A4',
+              400: '#DFC07B',
+              500: '#C5A059',
+              600: '#A9823D',
+              700: '#87652B',
+              800: '#644A20',
+              900: '#433115'
+            },
+            noir: {
+              950: '#0A0A0B',
+              900: '#121214',
+              850: '#18181B',
+              800: '#27272A',
+              700: '#3F3F46',
+              600: '#52525B'
+            }
+          },
+          fontFamily: {
+            serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+            sans: ['"Inter"', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom refined scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #121214;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #3F3F46;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #C5A059;
+    }
+
+    /* Stack card deck 3D depth */
+    .deck-container {
+      perspective: 1000px;
+    }
+    .deck-layer-1 {
+      transform: translate(0, 0) scale(1);
+      z-index: 30;
+    }
+    .deck-layer-2 {
+      transform: translateY(7px) scale(0.96);
+      opacity: 0.7;
+      z-index: 20;
+    }
+    .deck-layer-3 {
+      transform: translateY(14px) scale(0.92);
+      opacity: 0.4;
+      z-index: 10;
+    }
+
+    /* Card dragging dynamics */
+    .is-dragging {
+      opacity: 0.35 !important;
+      transform: scale(0.95) !important;
+      cursor: grabbing !important;
+    }
+
+    .drop-active {
+      border-color: #C5A059 !important;
+      background-color: rgba(197, 160, 89, 0.08) !important;
+      box-shadow: 0 0 25px rgba(197, 160, 89, 0.25);
+    }
+
+    /* Key legal vocabulary with interactive hover & tap feedback */
+    .legal-term {
+      color: #DFC07B;
+      font-weight: 600;
+      border-bottom: 1.5px dashed #C5A059;
+      padding: 1px 3px;
+      border-radius: 4px;
+      cursor: help;
+      position: relative;
+      transition: all 0.15s ease;
+      display: inline-block;
+    }
+
+    .legal-term:hover, .legal-term:focus {
+      color: #FFFFFF;
+      background-color: rgba(197, 160, 89, 0.25);
+      border-bottom-color: #FDFBF7;
+      text-shadow: 0 0 8px rgba(223, 192, 123, 0.6);
+    }
+
+    /* Print certificate sheet */
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #certificate-modal, #certificate-modal * {
+        visibility: visible;
+      }
+      #certificate-modal {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        color: black !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-noir-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-gold-500 selection:text-noir-950">
+
+  <header class="border-b border-noir-800 bg-noir-900/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+      <div class="flex items-center space-x-3.5">
+        <div class="w-10 h-10 rounded-lg bg-gradient-to-br from-gold-400 via-gold-500 to-gold-700 flex items-center justify-center text-noir-950 shadow-md">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/>
+            <path d="M7 21h10"/>
+            <path d="M12 3v18"/>
+            <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-lg font-serif tracking-wide font-semibold text-white uppercase">Forms of Business Organisation</h1>
+          </div>
+          <p class="text-xs text-slate-400">Classify the legal & structural characteristics into their correct entity</p>
+        </div>
+      </div>
+
+      <!-- Controls & Progress indicator -->
+      <div class="flex items-center gap-3 sm:gap-5">
+        <div class="hidden sm:flex flex-col items-end">
+          <span class="text-[11px] uppercase tracking-wider text-slate-400 font-medium">Sorting Progress</span>
+          <span id="progress-counter" class="text-xs font-semibold text-gold-400">0 of 25 Sorted</span>
+        </div>
+        
+        <div class="w-24 sm:w-36 h-2 rounded-full bg-noir-800 border border-noir-700 overflow-hidden">
+          <div id="progress-bar-fill" class="h-full bg-gradient-to-r from-gold-600 to-gold-400 transition-all duration-300" style="width: 0%"></div>
+        </div>
+
+        <button id="reset-button" class="p-2 text-xs font-medium text-slate-400 hover:text-white hover:bg-noir-800 rounded-lg border border-noir-700 transition" title="Reset all cards">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+          </svg>
+        </button>
+
+        <button id="check-answers-button" class="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-noir-950 bg-gradient-to-r from-gold-400 via-gold-500 to-gold-600 hover:from-gold-300 hover:to-gold-500 rounded-lg shadow-lg shadow-gold-500/10 active:scale-95 transition flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+          </svg>
+          <span>Submit & Check</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 flex-1 flex flex-col gap-6">
+
+    <!-- Card Deck Area (Interactive Stack) -->
+    <section class="bg-noir-900 border border-noir-800 rounded-2xl p-5 shadow-xl relative overflow-hidden">
+      <div class="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-gold-500/5 blur-3xl pointer-events-none"></div>
+      
+      <div class="flex flex-col md:flex-row items-center justify-between gap-4 pb-3 border-b border-noir-800/80">
+        <div>
+          <span class="text-xs font-semibold text-gold-400 uppercase tracking-widest">Active Flashcard Deck</span>
+          <p class="text-xs text-slate-400">
+            Drag cards into a column, or use quick buttons. 
+            <span class="text-gold-300 font-medium">💡 Hover or tap any dotted gold term for legal definitions.</span>
+          </p>
+        </div>
+        <div class="text-xs text-slate-400 font-mono bg-noir-850 px-3 py-1 rounded-full border border-noir-800">
+          <span id="deck-remaining-counter" class="text-gold-400 font-bold">25</span> cards awaiting placement
+        </div>
+      </div>
+
+      <div class="py-6 flex flex-col items-center justify-center min-h-[190px]">
+        <!-- Stack Deck Host -->
+        <div id="deck-stack" class="deck-container relative w-full max-w-xl h-36 flex items-center justify-center">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Quick Route Action Buttons (ideal for fast laptop mouse or tablet taps) -->
+        <div id="deck-quick-buttons" class="mt-5 flex flex-wrap items-center justify-center gap-2.5 w-full max-w-xl transition-opacity">
+          <button data-target="sole" class="quick-assign-btn flex-1 min-w-[140px] px-3 py-2 text-xs font-medium rounded-xl bg-noir-850 hover:bg-noir-800 text-slate-200 border border-noir-700 hover:border-gold-500/60 transition flex items-center justify-center gap-2 group">
+            <span class="w-2 h-2 rounded-full bg-amber-400 group-hover:scale-125 transition"></span>
+            Sole Proprietorship
+          </button>
+          <button data-target="partnership" class="quick-assign-btn flex-1 min-w-[140px] px-3 py-2 text-xs font-medium rounded-xl bg-noir-850 hover:bg-noir-800 text-slate-200 border border-noir-700 hover:border-gold-500/60 transition flex items-center justify-center gap-2 group">
+            <span class="w-2 h-2 rounded-full bg-blue-400 group-hover:scale-125 transition"></span>
+            Partnership
+          </button>
+          <button data-target="company" class="quick-assign-btn flex-1 min-w-[140px] px-3 py-2 text-xs font-medium rounded-xl bg-noir-850 hover:bg-noir-800 text-slate-200 border border-noir-700 hover:border-gold-500/60 transition flex items-center justify-center gap-2 group">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 group-hover:scale-125 transition"></span>
+            Limited Company
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Classification Buckets (Three Entity Columns) -->
+    <section class="grid grid-cols-1 md:grid-cols-3 gap-5 flex-1 items-start">
+      
+      <!-- Sole Proprietorship Column -->
+      <div id="col-sole" data-entity="sole" class="drop-zone flex flex-col bg-noir-900 border-2 border-noir-800 rounded-2xl min-h-[460px] p-4 transition-all duration-200 relative group">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-noir-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-noir-850 border border-gold-500/30 flex items-center justify-center text-gold-400 shadow-inner">
+              <!-- Solo Owner Icon -->
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="font-serif text-lg font-semibold tracking-wide text-white leading-tight">Sole Proprietorship</h2>
+              <span class="text-[11px] text-slate-400">Sole Trader / Single Owner</span>
+            </div>
+          </div>
+          <span class="entity-count px-2.5 py-0.5 text-xs font-mono rounded-full bg-noir-850 border border-noir-700 text-gold-400 font-medium">0</span>
+        </div>
+
+        <!-- Drop content area -->
+        <div class="card-list flex-1 mt-3 space-y-2.5 overflow-y-auto max-h-[500px] pr-1">
+          <!-- Placed cards inserted here -->
+        </div>
+
+        <div class="empty-state mt-8 text-center p-6 border border-dashed border-noir-800 rounded-xl pointer-events-none">
+          <p class="text-xs text-slate-500">Drop cards related to single ownership, personal loans & direct liability here</p>
+        </div>
+      </div>
+
+      <!-- Partnership Column -->
+      <div id="col-partnership" data-entity="partnership" class="drop-zone flex flex-col bg-noir-900 border-2 border-noir-800 rounded-2xl min-h-[460px] p-4 transition-all duration-200 relative group">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-noir-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-noir-850 border border-gold-500/30 flex items-center justify-center text-gold-400 shadow-inner">
+              <!-- Handshake / Partners Icon -->
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="font-serif text-lg font-semibold tracking-wide text-white leading-tight">Partnership</h2>
+              <span class="text-[11px] text-slate-400">General & Limited Partners</span>
+            </div>
+          </div>
+          <span class="entity-count px-2.5 py-0.5 text-xs font-mono rounded-full bg-noir-850 border border-noir-700 text-gold-400 font-medium">0</span>
+        </div>
+
+        <!-- Drop content area -->
+        <div class="card-list flex-1 mt-3 space-y-2.5 overflow-y-auto max-h-[500px] pr-1">
+          <!-- Placed cards inserted here -->
+        </div>
+
+        <div class="empty-state mt-8 text-center p-6 border border-dashed border-noir-800 rounded-xl pointer-events-none">
+          <p class="text-xs text-slate-500">Drop cards about agreements, partner liability & joint decision-making here</p>
+        </div>
+      </div>
+
+      <!-- Limited Company Column -->
+      <div id="col-company" data-entity="company" class="drop-zone flex flex-col bg-noir-900 border-2 border-noir-800 rounded-2xl min-h-[460px] p-4 transition-all duration-200 relative group">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-noir-800">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-noir-850 border border-gold-500/30 flex items-center justify-center text-gold-400 shadow-inner">
+              <!-- Skyscraper / Corporate Icon -->
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.75a1.5 1.5 0 0 1 1.5-1.5h3a1.5 1.5 0 0 1 1.5 1.5V21" />
+              </svg>
+            </div>
+            <div>
+              <h2 class="font-serif text-lg font-semibold tracking-wide text-white leading-tight">Limited Company</h2>
+              <span class="text-[11px] text-slate-400">Private (Ltd) / Public (Plc)</span>
+            </div>
+          </div>
+          <span class="entity-count px-2.5 py-0.5 text-xs font-mono rounded-full bg-noir-850 border border-noir-700 text-gold-400 font-medium">0</span>
+        </div>
+
+        <!-- Drop content area -->
+        <div class="card-list flex-1 mt-3 space-y-2.5 overflow-y-auto max-h-[500px] pr-1">
+          <!-- Placed cards inserted here -->
+        </div>
+
+        <div class="empty-state mt-8 text-center p-6 border border-dashed border-noir-800 rounded-xl pointer-events-none">
+          <p class="text-xs text-slate-500">Drop cards on separate legal entity status, share capital & statutory filings here</p>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <div id="results-modal" class="fixed inset-0 bg-noir-950/85 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden overflow-y-auto">
+    <div class="bg-noir-900 border border-gold-500/40 rounded-3xl max-w-3xl w-full p-6 sm:p-8 shadow-2xl relative my-8">
+      
+      <!-- Close button -->
+      <button id="close-modal-btn" class="absolute top-5 right-5 text-slate-400 hover:text-white p-2 rounded-lg bg-noir-800 hover:bg-noir-700 transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <!-- Printable Certificate Box -->
+      <div id="certificate-modal" class="border-2 border-gold-500/60 p-6 sm:p-8 rounded-2xl bg-gradient-to-b from-noir-900 via-noir-950 to-noir-900 text-center relative overflow-hidden">
+        
+        <!-- Subtle watermark seal -->
+        <div class="absolute inset-0 flex items-center justify-center opacity-5 pointer-events-none">
+          <span class="text-9xl font-serif font-bold text-gold-400">§</span>
+        </div>
+
+        <div class="inline-block mx-auto mb-3 px-3 py-1 rounded-full bg-gold-500/10 border border-gold-500/30 text-gold-400 text-xs font-semibold uppercase tracking-widest">
+          Statement of Mastery
+        </div>
+
+        <h3 class="text-2xl sm:text-3xl font-serif font-bold text-white tracking-wide">
+          Business Law Foundations
+        </h3>
+        <p class="text-xs text-gold-400 uppercase tracking-widest mt-1">Classification of Commercial Entities</p>
+
+        <!-- Dynamic Score Display -->
+        <div class="my-6 flex items-center justify-center gap-4">
+          <div class="p-4 rounded-xl bg-noir-850 border border-noir-700 min-w-[120px]">
+            <span class="block text-3xl font-bold font-mono text-gold-400" id="final-score-val">0 / 25</span>
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider">Correct Answers</span>
+          </div>
+          <div class="p-4 rounded-xl bg-noir-850 border border-noir-700 min-w-[120px]">
+            <span class="block text-3xl font-bold font-mono text-white" id="final-percentage-val">0%</span>
+            <span class="text-[11px] text-slate-400 uppercase tracking-wider">Accuracy</span>
+          </div>
+        </div>
+
+        <!-- Clean, objective certification message -->
+        <div class="max-w-xl mx-auto text-sm text-slate-300 leading-relaxed font-light mb-6">
+          <p id="feedback-summary-text">
+            You have categorized the legal forms of business organization. Your command over legal personality, liability, and statutory governance establishes a solid foundation for company law.
+          </p>
+        </div>
+
+        <div class="pt-4 border-t border-noir-800 flex items-center justify-between text-left text-xs text-slate-400">
+          <div>
+            <span class="block font-semibold text-slate-200">Legal Modules Completed:</span>
+            <span>Sole Trader • Partnership • Limited Company</span>
+          </div>
+          <div class="text-right">
+            <span class="text-gold-400 font-serif font-semibold text-sm">Verified Starter Exercise</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="mt-6 flex flex-wrap items-center justify-between gap-3 no-print">
+        <button id="toggle-detailed-breakdown-btn" class="px-4 py-2 text-xs font-medium rounded-lg text-slate-300 bg-noir-800 hover:bg-noir-700 border border-noir-700 transition">
+          View Detailed Breakdown & Key Terms
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button id="retry-btn" class="px-4 py-2 text-xs font-semibold rounded-lg bg-gold-500 hover:bg-gold-400 text-noir-950 transition">
+            Try Again
+          </button>
+        </div>
+      </div>
+
+      <!-- Detailed Breakdown drawer -->
+      <div id="breakdown-section" class="mt-6 border-t border-noir-800 pt-5 hidden no-print">
+        <h4 class="text-sm font-semibold text-gold-400 uppercase tracking-wider mb-3">Itemized Evaluation & Legal Notes</h4>
+        <div id="breakdown-list" class="space-y-2.5 max-h-60 overflow-y-auto pr-2 text-xs">
+          <!-- Injected via JavaScript -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Interactive Floating Legal Glossary Popover -->
+  <div id="legal-tooltip" class="fixed z-50 hidden max-w-xs sm:max-w-sm p-3.5 rounded-xl bg-noir-900 border border-gold-500/80 shadow-2xl shadow-black/80 backdrop-blur-md text-slate-100 transition-opacity duration-150 opacity-0 pointer-events-none">
+    <div class="flex items-center justify-between gap-2 mb-1.5 pb-1 border-b border-noir-750">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-gold-400"></span>
+        <span id="tooltip-term" class="text-xs font-serif font-bold text-gold-300 tracking-wide uppercase">Legal Concept</span>
+      </div>
+      <span class="text-[9px] px-1.5 py-0.5 rounded bg-gold-500/20 text-gold-300 font-mono tracking-tight uppercase">Legal Note</span>
+    </div>
+    <p id="tooltip-def" class="text-[11.5px] leading-relaxed text-slate-200"></p>
+  </div>
+
+  <script>
+    // Dedicated glossary dictionary powering interactive vocabulary tooltips
+    const LEGAL_GLOSSARY = {
+      'sole trader': {
+        term: 'Sole Trader (Sole Proprietor)',
+        def: 'An individual operating a commercial enterprise without any co-owners or registered corporate vehicle; they personally retain 100% of profits and absorb all commercial debts.'
+      },
+      'incorporation': {
+        term: 'Incorporation',
+        def: 'The formal statutory creation of a distinct legal entity by filing founding documents with Companies House and receiving an official Certificate of Incorporation.'
+      },
+      'death or the decision to close': {
+        term: 'Lack of Perpetual Succession',
+        def: 'Because an unincorporated business is legally indivisible from its owner, the business terminates automatically upon the proprietor’s death or decision to close.'
+      },
+      '100% of the unlimited personal liability alone': {
+        term: 'Sole Unlimited Personal Liability',
+        def: 'Creditors can legally enforce debts against the proprietor\'s personal property (such as their home, savings, and personal vehicle) without legal shielding.'
+      },
+      'personal loan': {
+        term: 'Personal Borrowing / Collateral',
+        def: 'Credit obtained in the individual’s private name; an unincorporated business cannot contract debt under a separate legal identity.'
+      },
+      'no partnership deed': {
+        term: 'Absence of Partnership Deed',
+        def: 'Minimal formalities; no co-ownership deed exists because ownership is vested in a single individual (only local permits or licenses may be needed).'
+      },
+      'oral, written, or implied': {
+        term: 'Informal Creation of Partnership',
+        def: 'Under the Partnership Act 1890, a partnership is formed automatically when 2+ people trade in common with a view of profit—no written agreement is legally mandatory.'
+      },
+      'jointly and severally': {
+        term: 'Joint & Several Liability',
+        def: 'A core commercial rule: all partners can be sued collectively (jointly), and any single partner can be held personally liable for the full 100% of the firm’s debts (severally).'
+      },
+      'dissolved': {
+        term: 'Dissolution of Partnership',
+        def: 'The legal termination of the partnership relationship. By default, the death or bankruptcy of any partner dissolves the entire firm unless the agreement overrides this.'
+      },
+      'general partners or limited partners': {
+        term: 'General vs. Limited Partners',
+        def: 'General partners have active management rights and unlimited liability; limited partners invest capital and their liability is capped at that sum, but they cannot manage.'
+      },
+      'equally or according to the partnership agreement': {
+        term: 'Profit Sharing Ratio (Default vs Agreed)',
+        def: 'Under s.24 of the Partnership Act 1890, partners share profits equally by default unless they formally define an alternative ratio in a partnership agreement.'
+      },
+      'shareholders': {
+        term: 'Shareholders (Company Owners)',
+        def: 'Equity owners of the company. In private companies (Ltd), shares are typically restricted to family and friends; in public companies (Plc), shares may be offered to the general public.'
+      },
+      'separate legal entity': {
+        term: 'Separate Legal Personality',
+        def: 'Established in Salomon v Salomon (1897): an incorporated company is a distinct legal "person" capable of holding property, contracting, suing, and being sued.'
+      },
+      'Limited liability': {
+        term: 'Limited Liability Principle',
+        def: 'The financial exposure of company members is restricted to their capital investment; their private personal estates cannot be seized for corporate debts.'
+      },
+      'unpaid on their shares': {
+        term: 'Liability Limited to Unpaid Capital',
+        def: 'Shareholders cannot be pursued beyond the amount (if any) remaining unpaid on the nominal value of their shares.'
+      },
+      'Corporate structure': {
+        term: 'Separation of Ownership & Control',
+        def: 'Companies separate equity holders (shareholders) from executive agents (directors bound by statutory fiduciary duties) and officers. A Supervisory Board may be required in some jurisdictions.'
+      },
+      'shares': {
+        term: 'Shares (Equity Capital)',
+        def: 'Stakes of fractional ownership in the company granting dividend rights, liquidation surplus rights, and general meeting voting power.'
+      },
+      'debentures': {
+        term: 'Debentures (Corporate Debt)',
+        def: 'Formal written loan agreements issued by a company to raise loan capital, typically secured by fixed or floating charges over company assets.'
+      },
+      'perpetual': {
+        term: 'Perpetual Succession',
+        def: 'The company continues in legal existence uninterrupted, surviving the death, resignation, or bankruptcy of its founders, directors, and shareholders.'
+      },
+      'Public companies': {
+        term: 'Public Limited Company (Plc)',
+        def: 'Companies meeting statutory capital thresholds (e.g., minimum £50,000 capital) permitted by statute to offer shares or debentures to the general public.'
+      },
+      'Memorandum of Association': {
+        term: 'Memorandum of Association',
+        def: 'The constitutional document signed by original subscribers evidencing their intention to form a company and take at least one share.'
+      },
+      'Articles of Association': {
+        term: 'Articles of Association',
+        def: 'The company’s internal constitutional rulebook governing director powers, board meetings, voting majorities, share transfers, and dividend declarations.'
+      },
+      'Certificate of Incorporation': {
+        term: 'Certificate of Incorporation',
+        def: 'The official document issued by the Registrar of Companies declaring that the company is formally incorporated and endowed with corporate status.'
+      },
+      'wound up voluntarily, compulsorily by court order': {
+        term: 'Liquidation & Winding Up',
+        def: 'Statutory procedures by which company assets are collected, liabilities satisfied, and the corporate entity is dissolved (either by shareholder vote or court order).'
+      }
+    };
+
+    // Complete dataset matched 1:1 with the original curriculum matrix
+    const RAW_CARDS = [
+      // Sole Proprietorship (8 cards)
+      {
+        id: 'sp_1',
+        correctEntity: 'sole',
+        text: 'One individual owns a business.',
+        htmlText: 'One individual owns a business.',
+        vocab: 'Single ownership',
+        note: 'Sole proprietorship is characterized by sole ownership vested in a single natural person.'
+      },
+      {
+        id: 'sp_2',
+        correctEntity: 'sole',
+        text: 'A sole trader who has no co-owners; may employ some individuals or may be the only worker.',
+        htmlText: 'A <span class="legal-term" data-term="sole trader">sole trader</span> who has no co-owners; may employ some individuals or may be the only worker.',
+        vocab: 'Sole trader / Worker',
+        note: 'A sole trader may hire employees under contracts of service while remaining the sole proprietor.'
+      },
+      {
+        id: 'sp_3',
+        correctEntity: 'sole',
+        text: 'No incorporation or co-owner agreement necessary; simply initiated by one individual starting trade.',
+        htmlText: 'No <span class="legal-term" data-term="incorporation">incorporation</span> or co-owner agreement necessary; simply initiated by one individual starting trade.',
+        vocab: 'Informal single start',
+        note: 'Unlike companies, no registration at Companies House is required; unlike partnerships, no co-owner agreement exists.'
+      },
+      {
+        id: 'sp_4',
+        correctEntity: 'sole',
+        text: 'Business comes to an end on the owner’s death or the decision to close.',
+        htmlText: 'Business comes to an end on the <span class="legal-term" data-term="death or the decision to close">owner’s death or the decision to close</span> (no perpetual succession).',
+        vocab: 'Termination on owner death',
+        note: 'Because owner and enterprise are indivisible, death or retirement legally brings the sole proprietorship to an end.'
+      },
+      {
+        id: 'sp_5',
+        correctEntity: 'sole',
+        text: 'The owner controls all the decisions and receives all the profit.',
+        htmlText: 'The owner controls all the decisions and receives all the profit.',
+        vocab: 'Sole control & profits',
+        note: 'Undivided governance: 100% of managerial control and 100% entitlement to commercial profits.'
+      },
+      {
+        id: 'sp_6',
+        correctEntity: 'sole',
+        text: 'A single owner bears 100% of the unlimited personal liability alone for the debts of the business.',
+        htmlText: 'A single owner bears <span class="legal-term" data-term="100% of the unlimited personal liability alone">100% of the unlimited personal liability alone</span> for the debts of the business.',
+        vocab: 'Sole unlimited liability',
+        note: 'The sole trader has no corporate veil; personal assets are directly accessible to business creditors.'
+      },
+      {
+        id: 'sp_7',
+        correctEntity: 'sole',
+        text: 'Capital provided by the owner or his/her personal loans.',
+        htmlText: 'Capital provided by the owner or his/her <span class="legal-term" data-term="personal loan">personal loans</span>.',
+        vocab: 'Owner / personal loan capital',
+        note: 'Financing is limited to private equity and personal borrowing collateralized by personal assets.'
+      },
+      {
+        id: 'sp_8',
+        correctEntity: 'sole',
+        text: 'Minimal legal formalities; may require licenses/permits (no partnership deed or registration).',
+        htmlText: 'Minimal legal formalities; <span class="legal-term" data-term="no partnership deed">may require licenses/permits</span> (no partnership deed or registration).',
+        vocab: 'Minimal formalities / Permits',
+        note: 'No constitutional documents or corporate filings; only municipal or trade permits if applicable.'
+      },
+
+      // Partnership (7 cards)
+      {
+        id: 'pt_1',
+        correctEntity: 'partnership',
+        text: 'Two or more partners own a business (they can be general partners or limited partners).',
+        htmlText: 'Two or more partners own a business (they can be <span class="legal-term" data-term="general partners or limited partners">general partners or limited partners</span>).',
+        vocab: 'General or limited partners',
+        note: 'Formed by two or more co-owners carrying on business together for profit.'
+      },
+      {
+        id: 'pt_2',
+        correctEntity: 'partnership',
+        text: 'Unlimited personal liability of each general partner (they are liable jointly and severally); limited partners’ liability is restricted to their investment.',
+        htmlText: 'Unlimited personal liability of each general partner (liable <span class="legal-term" data-term="jointly and severally">jointly and severally</span>); limited partners’ liability is restricted to their investment.',
+        vocab: 'Jointly and severally',
+        note: 'Creditors may sue all partners together or single out any individual partner for 100% of the debts.'
+      },
+      {
+        id: 'pt_3',
+        correctEntity: 'partnership',
+        text: 'Capital provided by partners or their loans.',
+        htmlText: 'Capital provided by partners or their loans.',
+        vocab: 'Partner capital / loans',
+        note: 'Funding is pooled from the personal funds or private borrowings of the partners.'
+      },
+      {
+        id: 'pt_4',
+        correctEntity: 'partnership',
+        text: 'No incorporation necessary, formed by agreement (oral, written, or implied); minimal legal formalities.',
+        htmlText: 'No incorporation necessary, formed by agreement (<span class="legal-term" data-term="oral, written, or implied">oral, written, or implied</span>); minimal legal formalities.',
+        vocab: 'Agreement (oral/written/implied)',
+        note: 'Under the Partnership Act 1890, mutual consent creates a partnership without registration at Companies House.'
+      },
+      {
+        id: 'pt_5',
+        correctEntity: 'partnership',
+        text: 'Managed by partners (unless specified otherwise in the agreement), may employ other persons.',
+        htmlText: 'Managed by partners (unless specified otherwise in the agreement), may employ other persons.',
+        vocab: 'Partner management / Mutual agency',
+        note: 'Each partner ordinarily has authority to act as an agent bind the firm and co-partners.'
+      },
+      {
+        id: 'pt_6',
+        correctEntity: 'partnership',
+        text: 'Profits are shared equally or according to the partnership agreement.',
+        htmlText: 'Profits are shared <span class="legal-term" data-term="equally or according to the partnership agreement">equally or according to the partnership agreement</span>.',
+        vocab: 'Equal / agreed profit share',
+        note: 'Statutory default rule dictates equal distribution unless modified by written or oral terms.'
+      },
+      {
+        id: 'pt_7',
+        correctEntity: 'partnership',
+        text: 'Dissolved by the death of a partner, withdrawal, or as agreed in the partnership contract.',
+        htmlText: '<span class="legal-term" data-term="dissolved">Dissolved</span> by the death of a partner, withdrawal, or as agreed in the partnership contract.',
+        vocab: 'Dissolution on death/withdrawal',
+        note: 'Subject to contract terms, death, bankruptcy, or resignation of any partner dissolves the firm.'
+      },
+
+      // Limited Company (10 cards)
+      {
+        id: 'lc_1',
+        correctEntity: 'company',
+        text: 'Shareholders own the business (private company: often family/friends; public company: may be the general public).',
+        htmlText: '<span class="legal-term" data-term="shareholders">Shareholders</span> own the business (private company: often family/friends; public company: may be the general public).',
+        vocab: 'Shareholders (Private/Public)',
+        note: 'Ownership is divided into shares held by restricted circles in private companies or open to the public in Plcs.'
+      },
+      {
+        id: 'lc_2',
+        correctEntity: 'company',
+        text: 'Limited liability for the company’s debts incurred; limited to the amount unpaid on their shares.',
+        htmlText: '<span class="legal-term" data-term="Limited liability">Limited liability</span> for the company’s debts incurred; <span class="legal-term" data-term="unpaid on their shares">limited to the amount unpaid on their shares</span>.',
+        vocab: 'Limited to unpaid shares',
+        note: 'Shareholders are only exposed up to the nominal unpaid amount on shares subscribed.'
+      },
+      {
+        id: 'lc_3',
+        correctEntity: 'company',
+        text: 'Raising capital by selling shares, issuing debentures.',
+        htmlText: 'Raising capital by selling <span class="legal-term" data-term="shares">shares</span>, issuing <span class="legal-term" data-term="debentures">debentures</span>.',
+        vocab: 'Selling shares & debentures',
+        note: 'Companies possess distinct corporate mechanisms for issuing equity and secured loan instruments.'
+      },
+      {
+        id: 'lc_4',
+        correctEntity: 'company',
+        text: 'Public companies may list shares on the Stock Exchange.',
+        htmlText: '<span class="legal-term" data-term="Public companies">Public companies</span> may list shares on the Stock Exchange.',
+        vocab: 'Stock Exchange listing',
+        note: 'Plcs meeting statutory authorized capital criteria can trade their equity on official public exchanges.'
+      },
+      {
+        id: 'lc_5',
+        correctEntity: 'company',
+        text: 'Incorporation necessary (filing documents with the Companies House, paying fees).',
+        htmlText: '<span class="legal-term" data-term="incorporation">Incorporation</span> necessary (filing documents with the Companies House, paying fees).',
+        vocab: 'Companies House filing & fees',
+        note: 'Statutory creation: corporate personality only takes effect upon registration and fee settlement.'
+      },
+      {
+        id: 'lc_6',
+        correctEntity: 'company',
+        text: 'A separate legal entity capable of holding property, contracting, suing, and being sued.',
+        htmlText: 'A <span class="legal-term" data-term="separate legal entity">separate legal entity</span> capable of holding property, contracting, suing, and being sued.',
+        vocab: 'Separate legal entity (Salomon)',
+        note: 'The fundamental rule that an incorporated company has its own legal personality separate from its owners.'
+      },
+      {
+        id: 'lc_7',
+        correctEntity: 'company',
+        text: 'Documents: Memorandum of Association, Articles of Association, Certificate of Incorporation.',
+        htmlText: 'Documents: <span class="legal-term" data-term="Memorandum of Association">Memorandum of Association</span>, <span class="legal-term" data-term="Articles of Association">Articles of Association</span>, <span class="legal-term" data-term="Certificate of Incorporation">Certificate of Incorporation</span>.',
+        vocab: 'Constitutional documents',
+        note: 'The foundational legal instruments establishing and governing the corporate entity.'
+      },
+      {
+        id: 'lc_8',
+        correctEntity: 'company',
+        text: 'A corporate structure is required: shareholders (owners of the business), directors (responsible for the management of the business), officers (agents of the business). In some cases, a Supervisory Board is required.',
+        htmlText: 'A <span class="legal-term" data-term="Corporate structure">corporate structure</span> is required: shareholders (owners), directors (management), officers (agents). In some cases, a Supervisory Board is required.',
+        vocab: 'Corporate structure & boards',
+        note: 'Formal corporate separation between ownership (members) and executive authority (board of directors).'
+      },
+      {
+        id: 'lc_9',
+        correctEntity: 'company',
+        text: 'May be established with a continuous (perpetual) life.',
+        htmlText: 'May be established with a continuous (<span class="legal-term" data-term="perpetual">perpetual</span>) life.',
+        vocab: 'Perpetual succession',
+        note: 'The company endures independently of the death, bankruptcy, or transfer of shares by any owner.'
+      },
+      {
+        id: 'lc_10',
+        correctEntity: 'company',
+        text: 'Can be wound up voluntarily, compulsorily by court order, or struck off the register.',
+        htmlText: 'Can be <span class="legal-term" data-term="wound up voluntarily, compulsorily by court order">wound up voluntarily, compulsorily by court order</span>, or struck off the register.',
+        vocab: 'Winding up & struck off',
+        note: 'Formal statutory exit procedures governed by insolvency law and Companies House deregistration.'
+      }
+    ];
+
+    let deckCards = [];
+    let placements = {
+      sole: [],
+      partnership: [],
+      company: []
+    };
+    let draggedCardId = null;
+
+    // Entity title map
+    const ENTITY_NAMES = {
+      sole: 'Sole Proprietorship',
+      partnership: 'Partnership',
+      company: 'Limited Company'
+    };
+
+    // DOM Elements
+    const deckStackEl = document.getElementById('deck-stack');
+    const deckRemainingCounterEl = document.getElementById('deck-remaining-counter');
+    const progressCounterEl = document.getElementById('progress-counter');
+    const progressBarFillEl = document.getElementById('progress-bar-fill');
+    const quickButtonsEl = document.getElementById('deck-quick-buttons');
+    const resultsModalEl = document.getElementById('results-modal');
+    const finalScoreValEl = document.getElementById('final-score-val');
+    const finalPercentageValEl = document.getElementById('final-percentage-val');
+    const feedbackSummaryTextEl = document.getElementById('feedback-summary-text');
+    const breakdownSectionEl = document.getElementById('breakdown-section');
+    const breakdownListEl = document.getElementById('breakdown-list');
+    const toggleBreakdownBtn = document.getElementById('toggle-detailed-breakdown-btn');
+
+    // Glossary Tooltip Elements
+    const legalTooltipEl = document.getElementById('legal-tooltip');
+    const tooltipTermEl = document.getElementById('tooltip-term');
+    const tooltipDefEl = document.getElementById('tooltip-def');
+    let activeTooltipTermEl = null;
+
+    // Utility: Fisher-Yates array shuffle
+    function shuffle(array) {
+      const arr = [...array];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function initGame() {
+      deckCards = shuffle(RAW_CARDS);
+      placements = {
+        sole: [],
+        partnership: [],
+        company: []
+      };
+      
+      // Clear all drop columns
+      ['sole', 'partnership', 'company'].forEach(entity => {
+        const colList = document.querySelector(`#col-${entity} .card-list`);
+        if (colList) colList.innerHTML = '';
+        updateColumnCounter(entity);
+      });
+
+      renderDeck();
+      updateProgress();
+      
+      // Close modal if open
+      resultsModalEl.classList.add('hidden');
+      breakdownSectionEl.classList.add('hidden');
+    }
+
+    function renderDeck() {
+      deckStackEl.innerHTML = '';
+      deckRemainingCounterEl.textContent = deckCards.length;
+
+      if (deckCards.length === 0) {
+        // Deck is empty message
+        deckStackEl.innerHTML = `
+          <div class="text-center p-4 bg-noir-850 border border-gold-500/20 rounded-xl">
+            <span class="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gold-500/10 text-gold-400 mb-2 font-serif text-lg">✓</span>
+            <p class="text-xs font-semibold text-slate-200">All ${RAW_CARDS.length} cards have been positioned</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Click "Submit & Check" above to evaluate your classifications.</p>
+          </div>
+        `;
+        quickButtonsEl.style.opacity = '0.35';
+        quickButtonsEl.style.pointerEvents = 'none';
+        return;
+      }
+
+      quickButtonsEl.style.opacity = '1';
+      quickButtonsEl.style.pointerEvents = 'auto';
+
+      // Render top 3 cards in stack for tactile look
+      const displayCount = Math.min(deckCards.length, 3);
+      for (let i = displayCount - 1; i >= 0; i--) {
+        const cardData = deckCards[i];
+        const cardEl = document.createElement('div');
+        
+        const isTop = i === 0;
+        cardEl.className = `absolute inset-0 m-auto w-full max-w-lg h-32 p-4 rounded-xl border transition-all duration-200 flex flex-col justify-between ${
+          isTop 
+            ? 'deck-layer-1 bg-noir-850 border-gold-500/60 shadow-2xl cursor-grab active:cursor-grabbing hover:border-gold-400' 
+            : i === 1 
+              ? 'deck-layer-2 bg-noir-850/80 border-noir-700 pointer-events-none' 
+              : 'deck-layer-3 bg-noir-850/50 border-noir-800 pointer-events-none'
+        }`;
+
+        cardEl.id = `card-${cardData.id}`;
+        cardEl.dataset.id = cardData.id;
+
+        if (isTop) {
+          cardEl.setAttribute('draggable', 'true');
+          setupDragListeners(cardEl);
+        }
+
+        cardEl.innerHTML = `
+          <div class="flex items-center justify-between text-[11px] text-slate-400">
+            <span class="font-mono text-gold-400 font-semibold">Card #${RAW_CARDS.length - deckCards.length + 1} of ${RAW_CARDS.length}</span>
+            <span class="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-noir-800 text-slate-300 border border-noir-700">Drag or Tap Entity</span>
+          </div>
+          <p class="text-xs sm:text-sm text-slate-100 font-medium leading-relaxed my-auto pr-2">
+            ${cardData.htmlText}
+          </p>
+          <div class="flex items-center justify-between text-[10px] text-slate-500 pt-1 border-t border-noir-800">
+            <span>Key concept: <strong class="text-gold-300/90">${cardData.vocab}</strong></span>
+            <span class="text-slate-500 font-mono">ID: ${cardData.id}</span>
+          </div>
+        `;
+
+        deckStackEl.appendChild(cardEl);
+      }
+    }
+
+    function setupDragListeners(element) {
+      element.addEventListener('dragstart', (e) => {
+        draggedCardId = element.dataset.id;
+        element.classList.add('is-dragging');
+        e.dataTransfer.setData('text/plain', draggedCardId);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      element.addEventListener('dragend', () => {
+        element.classList.remove('is-dragging');
+        draggedCardId = null;
+      });
+    }
+
+    // Set up drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+      zone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        zone.classList.add('drop-active');
+      });
+
+      zone.addEventListener('dragleave', (e) => {
+        // Prevent flicker when moving over child nodes
+        if (!zone.contains(e.relatedTarget)) {
+          zone.classList.remove('drop-active');
+        }
+      });
+
+      zone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        zone.classList.remove('drop-active');
+        const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+        if (!cardId) return;
+
+        const targetEntity = zone.dataset.entity;
+        assignCardToEntity(cardId, targetEntity);
+      });
+    });
+
+    // Quick assignment buttons under active deck
+    document.querySelectorAll('.quick-assign-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (deckCards.length === 0) return;
+        const targetEntity = btn.dataset.target;
+        const topCard = deckCards[0];
+        assignCardToEntity(topCard.id, targetEntity);
+      });
+    });
+
+    function assignCardToEntity(cardId, targetEntity) {
+      // Find card in deck OR in other entity placements
+      let cardData = null;
+      let fromDeck = false;
+      let fromOtherEntity = null;
+
+      // Check active deck first
+      const deckIndex = deckCards.findIndex(c => c.id === cardId);
+      if (deckIndex !== -1) {
+        cardData = deckCards.splice(deckIndex, 1)[0];
+        fromDeck = true;
+      } else {
+        // Check already placed columns
+        for (const [entity, list] of Object.entries(placements)) {
+          const idx = list.findIndex(c => c.id === cardId);
+          if (idx !== -1) {
+            cardData = list.splice(idx, 1)[0];
+            fromOtherEntity = entity;
+            break;
+          }
+        }
+      }
+
+      if (!cardData) return;
+
+      // Add to target entity placement array
+      placements[targetEntity].push(cardData);
+
+      // DOM updates
+      if (fromOtherEntity) {
+        // Remove existing placed card DOM node
+        const existingNode = document.getElementById(`placed-${cardId}`);
+        if (existingNode) existingNode.remove();
+        updateColumnCounter(fromOtherEntity);
+      }
+
+      renderPlacedCard(cardData, targetEntity);
+      updateColumnCounter(targetEntity);
+
+      if (fromDeck) {
+        renderDeck();
+      }
+
+      updateProgress();
+    }
+
+    function renderPlacedCard(cardData, entity) {
+      const container = document.querySelector(`#col-${entity} .card-list`);
+      if (!container) return;
+
+      const cardEl = document.createElement('div');
+      cardEl.id = `placed-${cardData.id}`;
+      cardEl.dataset.id = cardData.id;
+      cardEl.dataset.currentEntity = entity;
+      cardEl.draggable = true;
+      
+      cardEl.className = 'p-3 rounded-xl bg-noir-850 border border-noir-750 hover:border-gold-500/50 shadow-sm cursor-grab active:cursor-grabbing transition text-left flex flex-col gap-1.5 group relative';
+
+      // Drag re-routing from inside columns
+      cardEl.addEventListener('dragstart', (e) => {
+        draggedCardId = cardData.id;
+        cardEl.classList.add('is-dragging');
+        e.dataTransfer.setData('text/plain', cardData.id);
+        e.dataTransfer.effectAllowed = 'move';
+      });
+
+      cardEl.addEventListener('dragend', () => {
+        cardEl.classList.remove('is-dragging');
+        draggedCardId = null;
+      });
+
+      cardEl.innerHTML = `
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-mono text-gold-400 font-semibold">${cardData.vocab}</span>
+          <!-- Re-routing quick menu button -->
+          <div class="flex items-center gap-1 opacity-70 group-hover:opacity-100 transition">
+            <button data-action="move-other" title="Move to another category" class="p-1 rounded text-slate-400 hover:text-white hover:bg-noir-750 transition text-[10px]">
+              ⇄
+            </button>
+            <button data-action="return-deck" title="Return to active deck" class="p-1 rounded text-slate-400 hover:text-amber-400 hover:bg-noir-750 transition text-[10px]">
+              ✕
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-slate-200 leading-snug">
+          ${cardData.htmlText}
+        </p>
+      `;
+
+      // Quick move between buckets or back to deck
+      const returnBtn = cardEl.querySelector('[data-action="return-deck"]');
+      returnBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        returnCardToDeck(cardData.id, entity);
+      });
+
+      const moveOtherBtn = cardEl.querySelector('[data-action="move-other"]');
+      moveOtherBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        cycleCardToNextEntity(cardData.id, entity);
+      });
+
+      container.appendChild(cardEl);
+    }
+
+    function returnCardToDeck(cardId, currentEntity) {
+      const idx = placements[currentEntity].findIndex(c => c.id === cardId);
+      if (idx === -1) return;
+
+      const [cardData] = placements[currentEntity].splice(idx, 1);
+      const el = document.getElementById(`placed-${cardId}`);
+      if (el) el.remove();
+
+      deckCards.unshift(cardData); // Place back on top
+      updateColumnCounter(currentEntity);
+      renderDeck();
+      updateProgress();
+    }
+
+    function cycleCardToNextEntity(cardId, currentEntity) {
+      const sequence = ['sole', 'partnership', 'company'];
+      const nextIdx = (sequence.indexOf(currentEntity) + 1) % sequence.length;
+      const targetEntity = sequence[nextIdx];
+      assignCardToEntity(cardId, targetEntity);
+    }
+
+    function updateColumnCounter(entity) {
+      const col = document.getElementById(`col-${entity}`);
+      if (!col) return;
+      const countEl = col.querySelector('.entity-count');
+      const emptyStateEl = col.querySelector('.empty-state');
+      const count = placements[entity].length;
+      
+      if (countEl) countEl.textContent = count;
+      if (emptyStateEl) {
+        emptyStateEl.style.display = count === 0 ? 'block' : 'none';
+      }
+    }
+
+    function updateProgress() {
+      const totalSorted = RAW_CARDS.length - deckCards.length;
+      progressCounterEl.textContent = `${totalSorted} of ${RAW_CARDS.length} Sorted`;
+      const pct = Math.round((totalSorted / RAW_CARDS.length) * 100);
+      progressBarFillEl.style.width = `${pct}%`;
+    }
+
+    function evaluateResults() {
+      let correctCount = 0;
+      const breakdown = [];
+
+      // Check each column
+      ['sole', 'partnership', 'company'].forEach(entityKey => {
+        const placedList = placements[entityKey];
+        placedList.forEach(card => {
+          const isCorrect = card.correctEntity === entityKey;
+          if (isCorrect) correctCount++;
+
+          breakdown.push({
+            text: card.text,
+            vocab: card.vocab,
+            placedEntity: entityKey,
+            correctEntity: card.correctEntity,
+            isCorrect: isCorrect,
+            note: card.note
+          });
+        });
+      });
+
+      // Also account for cards left unplaced in deck
+      deckCards.forEach(card => {
+        breakdown.push({
+          text: card.text,
+          vocab: card.vocab,
+          placedEntity: 'none',
+          correctEntity: card.correctEntity,
+          isCorrect: false,
+          note: card.note
+        });
+      });
+
+      const totalCards = RAW_CARDS.length;
+      const percentage = Math.round((correctCount / totalCards) * 100);
+
+      // Render evaluation stats
+      finalScoreValEl.textContent = `${correctCount} / ${totalCards}`;
+      finalPercentageValEl.textContent = `${percentage}%`;
+
+      // Set professional, balanced feedback summary
+      if (percentage === 100) {
+        feedbackSummaryTextEl.innerHTML = `
+          <strong>Outstanding distinction.</strong> You achieved flawless classification across all ${totalCards} characteristics. You clearly comprehend statutory company personality, unlimited general liability, and the nuances of mutual agency and perpetual succession.
+        `;
+      } else if (percentage >= 80) {
+        feedbackSummaryTextEl.innerHTML = `
+          <strong>Commendable proficiency.</strong> You accurately categorized the majority of corporate and partnership structures. Review the detailed breakdown below to consolidate terms like <em>"jointly and severally"</em> and corporate share capital mechanisms.
+        `;
+      } else if (percentage >= 60) {
+        feedbackSummaryTextEl.innerHTML = `
+          <strong>Sound baseline understanding.</strong> You have grasps of the basic owner structures, but some distinctions between partnerships and limited company statutory requirements require closer review before advancing to company formation law.
+        `;
+      } else {
+        feedbackSummaryTextEl.innerHTML = `
+          <strong>Starter exercise complete.</strong> Some structural elements were mismatched. Note particularly the dividing line between unincorporated businesses (sole traders & partnerships) and incorporated companies with separate legal personality.
+        `;
+      }
+
+      // Populate detailed breakdown
+      breakdownListEl.innerHTML = '';
+      breakdown.sort((a, b) => (a.isCorrect === b.isCorrect ? 0 : a.isCorrect ? -1 : 1));
+
+      breakdown.forEach(item => {
+        const row = document.createElement('div');
+        row.className = `p-3 rounded-lg border flex flex-col gap-1 ${
+          item.isCorrect 
+            ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-200' 
+            : 'bg-rose-950/20 border-rose-500/30 text-rose-200'
+        }`;
+
+        const statusBadge = item.isCorrect 
+          ? '<span class="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">✓ CORRECT</span>'
+          : '<span class="text-[10px] font-bold text-rose-400 bg-rose-500/10 px-1.5 py-0.5 rounded">✗ INCORRECT</span>';
+
+        const entityLabel = item.placedEntity === 'none' 
+          ? '<span class="text-slate-400">Left in deck</span>' 
+          : `<span class="${item.isCorrect ? 'text-emerald-300' : 'text-rose-300 line-through'}">${ENTITY_NAMES[item.placedEntity]}</span>`;
+
+        row.innerHTML = `
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-semibold text-white">${item.vocab}</span>
+            <div class="flex items-center gap-2">
+              <span>Your match: ${entityLabel}</span>
+              ${statusBadge}
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-300">"${item.text}"</p>
+          ${!item.isCorrect ? `<div class="text-[11px] text-gold-400 font-medium">Correct Entity: ${ENTITY_NAMES[item.correctEntity]}</div>` : ''}
+          <p class="text-[10px] text-slate-400 italic mt-0.5">Note: ${item.note}</p>
+        `;
+        breakdownListEl.appendChild(row);
+      });
+
+      // Display Modal
+      resultsModalEl.classList.remove('hidden');
+    }
+
+    document.getElementById('check-answers-button').addEventListener('click', evaluateResults);
+
+    document.getElementById('reset-button').addEventListener('click', () => {
+      initGame();
+    });
+
+    document.getElementById('retry-btn').addEventListener('click', () => {
+      initGame();
+    });
+
+    document.getElementById('close-modal-btn').addEventListener('click', () => {
+      resultsModalEl.classList.add('hidden');
+    });
+
+    toggleBreakdownBtn.addEventListener('click', () => {
+      const isHidden = breakdownSectionEl.classList.contains('hidden');
+      if (isHidden) {
+        breakdownSectionEl.classList.remove('hidden');
+        toggleBreakdownBtn.textContent = 'Hide Detailed Breakdown';
+      } else {
+        breakdownSectionEl.classList.add('hidden');
+        toggleBreakdownBtn.textContent = 'View Detailed Breakdown & Key Terms';
+      }
+    });
+
+    // Close modal upon backdrop click
+    resultsModalEl.addEventListener('click', (e) => {
+      if (e.target === resultsModalEl) {
+        resultsModalEl.classList.add('hidden');
+      }
+    });
+
+    // Keyboard accessibility: ESC closes modal
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !resultsModalEl.classList.contains('hidden')) {
+        resultsModalEl.classList.add('hidden');
+      }
+      if (e.key === 'Escape') {
+        hideLegalTooltip();
+      }
+    });
+
+    function showLegalTooltip(termKey, triggerEl) {
+      const entry = LEGAL_GLOSSARY[termKey];
+      if (!entry || !legalTooltipEl) return;
+
+      activeTooltipTermEl = triggerEl;
+      tooltipTermEl.textContent = entry.term;
+      tooltipDefEl.textContent = entry.def;
+
+      legalTooltipEl.classList.remove('hidden');
+
+      // Calculate position relative to target
+      const rect = triggerEl.getBoundingClientRect();
+      const tooltipWidth = Math.min(320, window.innerWidth - 24);
+      legalTooltipEl.style.width = `${tooltipWidth}px`;
+
+      let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+      // Ensure tooltip remains inside horizontal viewport
+      if (left < 12) left = 12;
+      if (left + tooltipWidth > window.innerWidth - 12) {
+        left = window.innerWidth - tooltipWidth - 12;
+      }
+
+      // Position above by default; if too close to top, show below
+      let top = rect.top - legalTooltipEl.offsetHeight - 8;
+      if (top < 10) {
+        top = rect.bottom + 8;
+      }
+
+      legalTooltipEl.style.left = `${left}px`;
+      legalTooltipEl.style.top = `${top}px`;
+
+      // Animate in
+      requestAnimationFrame(() => {
+        legalTooltipEl.classList.remove('opacity-0');
+        legalTooltipEl.classList.add('opacity-100');
+      });
+    }
+
+    function hideLegalTooltip() {
+      if (!legalTooltipEl) return;
+      legalTooltipEl.classList.add('opacity-0');
+      legalTooltipEl.classList.remove('opacity-100');
+      setTimeout(() => {
+        if (legalTooltipEl.classList.contains('opacity-0')) {
+          legalTooltipEl.classList.add('hidden');
+        }
+      }, 150);
+      activeTooltipTermEl = null;
+    }
+
+    // Global event delegation for hovering/tapping legal terms in both cards and breakdown
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('.legal-term');
+      if (target && target.dataset.term) {
+        showLegalTooltip(target.dataset.term, target);
+      }
+    });
+
+    document.addEventListener('mouseout', (e) => {
+      const target = e.target.closest('.legal-term');
+      if (target) {
+        hideLegalTooltip();
+      }
+    });
+
+    // Mobile touch and click support
+    document.addEventListener('click', (e) => {
+      const target = e.target.closest('.legal-term');
+      if (target && target.dataset.term) {
+        e.stopPropagation();
+        if (activeTooltipTermEl === target) {
+          hideLegalTooltip();
+        } else {
+          showLegalTooltip(target.dataset.term, target);
+        }
+      } else {
+        // Tap outside dismisses
+        hideLegalTooltip();
+      }
+    });
+
+    // Start on initial page load
+    window.addEventListener('DOMContentLoaded', () => {
+      initGame();
+    });
+  </script>
+</body>
+</html>
